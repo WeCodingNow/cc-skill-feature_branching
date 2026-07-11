@@ -15,7 +15,10 @@ fi
 
 # Adjust this list if a project genuinely needs more types -- don't add
 # ones Conventional Commits merely *permits* without a real need for them.
-allowed_types='feat|fix|docs|refactor|test|chore'
+# `ai` is not a stock Conventional Commits type -- it's reserved for
+# commits generated mechanically by this skill's own scripts (currently
+# just scripts/drop-specs.sh). Never hand-write an `ai`-type commit.
+allowed_types='feat|fix|docs|refactor|test|chore|ai'
 pattern="^(${allowed_types})(\([a-zA-Z0-9_/-]+\))?!?: .+"
 
 if ! [[ "$first_line" =~ $pattern ]]; then

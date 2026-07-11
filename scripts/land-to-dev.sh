@@ -20,6 +20,12 @@ if ! git rev-parse --verify --quiet dev >/dev/null; then
   exit 1
 fi
 
+if ! git diff --quiet dev...HEAD -- .specs 2>/dev/null; then
+  echo "error: '$current_branch' has changes under .specs/ relative to dev." >&2
+  echo "Promote anything durable (e.g. into docs/) as its own commit, then run scripts/drop-specs.sh, then rerun this script." >&2
+  exit 1
+fi
+
 main_worktree=$(git worktree list --porcelain | awk '/^worktree /{print $2; exit}')
 if [ "$(pwd -P)" = "$(cd "$main_worktree" && pwd -P)" ]; then
   echo "error: refusing to land from the repo's main working directory -- do this from the feature branch's own worktree" >&2
