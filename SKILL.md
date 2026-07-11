@@ -53,6 +53,23 @@ predict which one applies, treat it as unknown and fix it up explicitly:
    the integration branch is a repo-setup decision for a human to make, not
    something to do unilaterally mid-task — say so rather than inventing one.
 
+**Naming the branch/worktree**: for ordinary feature work, `feature/<name>`
+(see global `CLAUDE.md`'s "Branch naming" section for the full convention,
+including the review-branch case). For a branch whose whole purpose is some
+other goal — a review branch being the concrete example today — don't
+hand-build the name — derive it from the goal and the branch or context
+it's about:
+
+```sh
+scripts/normalize-branch-name.sh <goal> <source-branch>
+```
+
+This prints `<goal>/<source-branch-with-every-/-replaced-by-->`, e.g.
+`review/feature-do_stuff` for a review (`<goal>` = `review`) of
+`feature/do_stuff` — so the result is always exactly one slash deep no
+matter how many segments the source branch's own name had. Pass that
+string straight to `EnterWorktree` as `name`.
+
 ## Committing: Conventional Commits, atomic, buildable
 
 Every commit title must follow
