@@ -116,41 +116,41 @@ make these calls for you):
 Spec-driven work often produces documents that matter *now* but shouldn't
 live in the project forever. The clearest case today: once a code review
 pass has validated its findings, write the review's artifacts under
-`.specs/review/` — including a `.specs/review/TODO.md` tracking what the
+`.spec/review/` — including a `.spec/review/TODO.md` tracking what the
 review turned up. (This skill only reserves that location; the actual
 shape and handling of `TODO.md` itself belongs to a separate, dedicated
-TODO.md-handling skill.) Track `.specs/` in git, on the feature branch —
+TODO.md-handling skill.) Track `.spec/` in git, on the feature branch —
 it's tracked, not gitignored, so the "why" behind a decision survives in
 commit history for as long as the branch is alive.
 
-`.specs/` never reaches `dev`: it exists only on feature branches and gets
+`.spec/` never reaches `dev`: it exists only on feature branches and gets
 removed in a final commit before landing. Two things happen at that point,
 one judgment call and one mechanical step:
 
 1. **Promote anything durable** (judgment call, not scriptable). Before
-   dropping `.specs/`, look at what's in there and ask whether any of it
+   dropping `.spec/`, look at what's in there and ask whether any of it
    should outlive the branch — e.g. a decision and its rationale that
    belongs in `docs/` (or wherever this project keeps permanent
    documentation). If so, make that a normal commit on the branch first.
-   Most of what accumulates in `.specs/` won't clear this bar — that's
+   Most of what accumulates in `.spec/` won't clear this bar — that's
    expected, it's a workspace, not a destination.
 2. **Drop what's left** (mechanical):
    ```sh
    /path/to/cc-skill-feature_branching/scripts/drop-specs.sh
    ```
    Run it from inside the worktree, on the branch being landed, after any
-   promotion commit. It removes `.specs/` and commits the removal as
+   promotion commit. It removes `.spec/` and commits the removal as
    `ai(cleanup): drop specs for <branch>` — the `ai` commit type is
    reserved for this: mechanically-generated commits from this skill's own
    scripts, never hand-written.
 
-`land-to-dev.sh` (below) refuses to run if `.specs/` still differs from
+`land-to-dev.sh` (below) refuses to run if `.spec/` still differs from
 `dev` on the branch being landed, so this can't be skipped by accident.
 
 ## Landing on `dev`
 
 Once your worktree branch is done — buildable, commits atomic, any
-`.specs/` content promoted-and-dropped (see above), ready to be part of
+`.spec/` content promoted-and-dropped (see above), ready to be part of
 `dev`'s history — land it with:
 
 ```sh

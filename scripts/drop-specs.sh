@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Drop this branch's ephemeral .specs/ before landing: removes .specs/ in one
+# Drop this branch's ephemeral .spec/ before landing: removes .spec/ in one
 # commit so it never reaches `dev`. Run only after anything durable has
 # already been promoted elsewhere (e.g. into docs/) as its own commit -- see
 # SKILL.md's "Ephemeral specs" section for that judgment call.
@@ -12,7 +12,7 @@ if [ -z "$current_branch" ]; then
 fi
 
 if [ "$current_branch" = "main" ] || [ "$current_branch" = "dev" ]; then
-  echo "error: refusing to touch .specs/ on '$current_branch' -- check out your worktree's own feature branch first" >&2
+  echo "error: refusing to touch .spec/ on '$current_branch' -- check out your worktree's own feature branch first" >&2
   exit 1
 fi
 
@@ -22,16 +22,16 @@ if ! git rev-parse --verify --quiet dev >/dev/null; then
 fi
 
 if [ -n "$(git status --porcelain)" ]; then
-  echo "error: uncommitted changes present -- commit them (including any docs/ promotion) before dropping .specs/" >&2
+  echo "error: uncommitted changes present -- commit them (including any docs/ promotion) before dropping .spec/" >&2
   exit 1
 fi
 
-if [ ! -d .specs ]; then
-  echo "No .specs/ directory on '$current_branch' -- nothing to drop."
+if [ ! -d .spec ]; then
+  echo "No .spec/ directory on '$current_branch' -- nothing to drop."
   exit 0
 fi
 
-git rm -r --quiet .specs
+git rm -r --quiet .spec
 git commit --quiet -m "ai(cleanup): drop specs for $current_branch"
 
-echo "Dropped .specs/ in a new commit on '$current_branch' ($(git rev-parse --short HEAD))."
+echo "Dropped .spec/ in a new commit on '$current_branch' ($(git rev-parse --short HEAD))."
