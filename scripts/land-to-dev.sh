@@ -4,6 +4,12 @@
 # for the reasoning behind each check below.
 set -euo pipefail
 
+# Resolves to this script's own directory, so the sibling script below can
+# be called by an absolute path -- this script is documented to run with
+# the worktree root as cwd (see SKILL.md), not from inside scripts/, so a
+# bare `list-spec-inbox.sh` call would fail (not on PATH, not in cwd).
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 current_branch=$(git branch --show-current)
 if [ -z "$current_branch" ]; then
   echo "error: not on a branch (detached HEAD) -- nothing to land" >&2
@@ -68,5 +74,6 @@ echo "Clean up this worktree/branch when you're done with it (ExitWorktree, or '
 
 if [ -d .spec-inbox ] && [ -n "$(find .spec-inbox -type f -print -quit)" ]; then
   echo
-  echo "Note: .spec-inbox/ has entries -- consider reviewing it for anything this branch consumed or that's gone stale, and dropping it."
+  echo "Did something in this list go stale?"
+  "$SCRIPT_DIR/list-spec-inbox.sh"
 fi

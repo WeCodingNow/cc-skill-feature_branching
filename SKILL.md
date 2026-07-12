@@ -123,6 +123,20 @@ TODO.md-handling skill.) Track `.spec/` in git, on the feature branch —
 it's tracked, not gitignored, so the "why" behind a decision survives in
 commit history for as long as the branch is alive.
 
+Every spec file starts with YAML frontmatter containing a short, terse
+`description:` (one to two sentences), from the moment it's created:
+
+```markdown
+---
+description: Research on how to provision apt cache so that debian VMs can avoid doing apt update.
+---
+```
+
+This means anything later moved into `.spec-inbox/` is already
+compliant — there's no separate "add a description" step at inbox time.
+It's what lets `scripts/list-spec-inbox.sh` (below) surface inbox entries
+by description instead of just filenames.
+
 `.spec/` never reaches `dev`: it exists only on feature branches and gets
 removed in a final commit before landing. Three things can happen at that
 point, two judgment calls and one mechanical step:
@@ -148,8 +162,9 @@ point, two judgment calls and one mechanical step:
    consumes an inbox entry (or determines it's gone stale), delete it from
    `.spec-inbox/` as a normal commit right then — this isn't limited to
    landing time, and like promotion, "is this still useful" is a judgment
-   call, not something a script can decide. `land-to-dev.sh` prints a
-   reminder to consider this on every successful land (see below).
+   call, not something a script can decide. `land-to-dev.sh` lists inbox
+   entries (path + description, via `scripts/list-spec-inbox.sh`) on every
+   successful land, as a reminder to consider this — see below.
 3. **Drop what's left of `.spec/`** (mechanical):
    ```sh
    /path/to/cc-skill-feature_branching/scripts/drop-specs.sh
@@ -164,6 +179,12 @@ point, two judgment calls and one mechanical step:
 `dev` on the branch being landed, so this can't be skipped by accident.
 It never checks `.spec-inbox/` this way, since that directory is meant to
 persist rather than be dropped.
+
+`scripts/list-spec-inbox.sh` — run standalone any time, not just at
+landing — prints one line per file under `.spec-inbox/`: the path and its
+frontmatter `description:`, or `WARNING no description` if the file has
+no frontmatter or no `description:` field (missing frontmatter shouldn't
+block anything, just get flagged).
 
 ## Landing on `dev`
 
