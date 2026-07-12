@@ -65,3 +65,8 @@ echo
 echo "Landed. 'dev' now points at $(git rev-parse --short dev)."
 echo "If dev is checked out in another worktree, it'll show as behind there until that worktree refreshes -- nothing is lost."
 echo "Clean up this worktree/branch when you're done with it (ExitWorktree, or 'git worktree remove' + 'git branch -d $current_branch')."
+
+if [ -d .spec-inbox ] && [ -n "$(find .spec-inbox -type f -print -quit)" ]; then
+  echo
+  echo "Note: .spec-inbox/ has entries -- consider reviewing it for anything this branch consumed or that's gone stale, and dropping it."
+fi

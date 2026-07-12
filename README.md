@@ -31,11 +31,17 @@ ln -s /path/to/cc-skill-feature_branching ~/.claude/skills/feature-branching
 ```
 SKILL.md                          - the skill itself: workflow, reasoning, when to use which script
 scripts/land-to-dev.sh            - rebase the current worktree branch onto dev, then fast-forward dev
-scripts/drop-specs.sh             - remove a branch's .spec/ in one commit, after any promotion, before landing
+scripts/drop-specs.sh             - remove a branch's .spec/ in one commit, after any promotion/inbox, before landing
 scripts/normalize-branch-name.sh - print <goal>/<source-branch, slashes replaced with dashes>
 scripts/install-commit-msg-hook.sh - one-time per repo: symlinks hooks/commit-msg into .git/hooks
 hooks/commit-msg                  - validates commit titles against Conventional Commits 1.0.0
 ```
+
+`.spec/` isn't the only ephemeral-spec location this skill knows about —
+unconsumed specs (research being the common case) can also live in
+`.spec-inbox/`, which is tracked on `dev` itself rather than dropped
+before landing. See `SKILL.md`'s "Ephemeral specs" section for the full
+create/promote/inbox/drop story.
 
 ## Why a script for landing, but not for starting or committing
 

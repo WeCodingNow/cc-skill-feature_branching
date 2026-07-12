@@ -111,7 +111,7 @@ make these calls for you):
 - **A description that explains *why*, not just *what*** — the diff already
   shows what changed.
 
-## Ephemeral specs: create, promote, drop
+## Ephemeral specs: create, promote, inbox, drop
 
 Spec-driven work often produces documents that matter *now* but shouldn't
 live in the project forever. The clearest case today: once a code review
@@ -124,8 +124,8 @@ it's tracked, not gitignored, so the "why" behind a decision survives in
 commit history for as long as the branch is alive.
 
 `.spec/` never reaches `dev`: it exists only on feature branches and gets
-removed in a final commit before landing. Two things happen at that point,
-one judgment call and one mechanical step:
+removed in a final commit before landing. Three things can happen at that
+point, two judgment calls and one mechanical step:
 
 1. **Promote anything durable** (judgment call, not scriptable). Before
    dropping `.spec/`, look at what's in there and ask whether any of it
@@ -134,18 +134,36 @@ one judgment call and one mechanical step:
    documentation). If so, make that a normal commit on the branch first.
    Most of what accumulates in `.spec/` won't clear this bar — that's
    expected, it's a workspace, not a destination.
-2. **Drop what's left** (mechanical):
+2. **Inbox anything unconsumed** (judgment call, not scriptable). Some
+   specs are neither durable-enough-for-docs/ nor safe to throw away —
+   they just haven't been *consumed* yet (research done for this branch
+   that turns out to matter for a different, not-yet-started feature is
+   the common case). Move those into `.spec-inbox/` at the repo root,
+   preserving their relative path under `.spec/` (e.g.
+   `.spec/research/x.md` → `.spec-inbox/research/x.md`), via a normal
+   `git mv` + commit. Unlike `.spec/`, `.spec-inbox/` is tracked on `dev`
+   itself — not gitignored, not dropped before landing — because it's
+   meant to outlive the branch that populated it; a later, unrelated
+   branch is the expected consumer. Symmetrically, once a branch actually
+   consumes an inbox entry (or determines it's gone stale), delete it from
+   `.spec-inbox/` as a normal commit right then — this isn't limited to
+   landing time, and like promotion, "is this still useful" is a judgment
+   call, not something a script can decide. `land-to-dev.sh` prints a
+   reminder to consider this on every successful land (see below).
+3. **Drop what's left of `.spec/`** (mechanical):
    ```sh
    /path/to/cc-skill-feature_branching/scripts/drop-specs.sh
    ```
    Run it from inside the worktree, on the branch being landed, after any
-   promotion commit. It removes `.spec/` and commits the removal as
+   promotion/inbox commits. It removes `.spec/` and commits the removal as
    `ai(cleanup): drop specs for <branch>` — the `ai` commit type is
    reserved for this: mechanically-generated commits from this skill's own
    scripts, never hand-written.
 
 `land-to-dev.sh` (below) refuses to run if `.spec/` still differs from
 `dev` on the branch being landed, so this can't be skipped by accident.
+It never checks `.spec-inbox/` this way, since that directory is meant to
+persist rather than be dropped.
 
 ## Landing on `dev`
 
