@@ -46,7 +46,15 @@ if ! git rebase dev; then
 fi
 
 echo "Fast-forwarding 'dev' to '$current_branch' (fails if dev moved since the rebase)..."
-if ! git fetch . "$current_branch:dev"; then
+# --update-head-ok: dev may be checked out (as HEAD) in the repo's main
+# working directory or another worktree. git fetch refuses to update such a
+# ref by default as a safety check unrelated to fast-forward-ness; this
+# flag lifts that check. The actual safety property we rely on -- that this
+# only ever succeeds as a genuine fast-forward -- is unaffected: git fetch
+# still fails the ref update if dev is not an ancestor of $current_branch.
+# Any worktree with dev checked out simply won't see the new commits in its
+# working files/index until it's refreshed there (see message below).
+if ! git fetch . --update-head-ok "$current_branch:dev"; then
   echo >&2
   echo "error: could not fast-forward dev -- it likely moved since you rebased (e.g. another worktree landed first)." >&2
   echo "Rerun 'git rebase dev' to pick up the new tip, then rerun this script." >&2
