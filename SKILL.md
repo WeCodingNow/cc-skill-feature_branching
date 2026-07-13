@@ -7,6 +7,9 @@ allowed-tools:
   - Bash(git status *)
   - Bash(git rev-parse *)
   - Bash(echo *)
+  - Bash(*/.claude/skills/feature-branching/scripts/normalize-branch-name.sh)
+  - Bash(*/.claude/skills/feature-branching/scripts/list-spec-inbox.sh)
+
 ---
 
 # Feature branching: worktree → dev → main
@@ -76,7 +79,7 @@ hand-build the name — derive it from the goal and the branch or context
 it's about:
 
 ```sh
-scripts/normalize-branch-name.sh <goal> <source-branch>
+${CLAUDE_SKILL_DIR}/scripts/normalize-branch-name.sh <goal> <source-branch>
 ```
 
 This prints `<goal>/<source-branch-with-every-/-replaced-by-->`, e.g.
@@ -108,7 +111,7 @@ live in the repo's shared `.git/hooks`, not per-worktree, so this doesn't
 need repeating for every new worktree:
 
 ```sh
-/path/to/cc-skill-feature_branching/scripts/install-commit-msg-hook.sh
+${CLAUDE_SKILL_DIR}/scripts/install-commit-msg-hook.sh
 ```
 
 It symlinks `hooks/commit-msg` into place and makes it executable. If the
@@ -182,7 +185,7 @@ point, two judgment calls and one mechanical step:
    successful land, as a reminder to consider this — see below.
 3. **Drop what's left of `.spec/`** (mechanical):
    ```sh
-   /path/to/cc-skill-feature_branching/scripts/drop-specs.sh
+   ${CLAUDE_SKILL_DIR}/scripts/drop-specs.sh
    ```
    Run it from inside the worktree, on the branch being landed, after any
    promotion/inbox commits. It removes `.spec/` and commits the removal as
@@ -200,6 +203,9 @@ landing — prints one line per file under `.spec-inbox/`: the path and its
 frontmatter `description:`, or `WARNING no description` if the file has
 no frontmatter or no `description:` field (missing frontmatter shouldn't
 block anything, just get flagged).
+```sh
+${CLAUDE_SKILL_DIR}/scripts/list-spec-inbox.sh
+```
 
 ## Landing on `dev`
 
@@ -208,7 +214,7 @@ Once your worktree branch is done — buildable, commits atomic, any
 `dev`'s history — land it with:
 
 ```sh
-/path/to/cc-skill-feature_branching/scripts/land-to-dev.sh
+${CLAUDE_SKILL_DIR}/scripts/land-to-dev.sh
 ```
 
 Run it from inside the worktree, on the branch you're landing. It rebases
