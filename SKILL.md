@@ -210,9 +210,16 @@ ${CLAUDE_SKILL_DIR}/scripts/list-spec-inbox.sh
 
 ## Landing on `dev`
 
+### User approval
+
+First you must obtain an approve from the user. This is done because the user
+may want to do additional stuff on the branch - conduct own review, make small fixes.
+
+### Mechanics of landing
+
 Once your worktree branch is done — buildable, commits atomic, any
-`.spec/` content promoted-and-dropped (see above), ready to be part of
-`dev`'s history — land it with:
+`.spec/` content promoted-and-dropped (see above), **approved by the user**,
+ready to be part of `dev`'s history — land it with:
 
 ```sh
 ${CLAUDE_SKILL_DIR}/scripts/land-to-dev.sh
