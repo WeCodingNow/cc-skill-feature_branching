@@ -6,6 +6,7 @@ allowed-tools:
   - Bash(git worktree *)
   - Bash(git status *)
   - Bash(git rev-parse *)
+  - Bash(git rebase dev)
   - Bash(echo *)
   - Bash(*/.claude/skills/feature-branching/scripts/normalize-branch-name.sh)
   - Bash(*/.claude/skills/feature-branching/scripts/list-spec-inbox.sh)
