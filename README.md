@@ -45,7 +45,6 @@ SKILL.md                          - the skill itself: workflow, reasoning, when 
 scripts/land-to-dev.sh            - rebase the current worktree branch onto dev, then fast-forward dev
 scripts/drop-specs.sh             - remove a branch's .spec/ in one commit, after any promotion/inbox, before landing
 scripts/list-spec-inbox.sh        - print .spec-inbox/ entries with their frontmatter description (or a warning if missing)
-scripts/normalize-branch-name.sh - print <goal>/<source-branch, slashes replaced with dashes>
 ```
 
 `.spec/` isn't the only ephemeral-spec location this skill knows about —
