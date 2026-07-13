@@ -1,6 +1,12 @@
 ---
 name: feature-branching
 description: Enforces a worktree-per-branch git workflow with a `dev` integration branch sitting between feature work and `main` — creating worktrees off the right base, writing Conventional Commits, and landing finished work onto `dev` via rebase + fast-forward (never a merge commit, never touching `main`). Use this whenever the user asks to start work on something new, create or set up a worktree, land/merge/integrate a branch onto dev, check whether a commit message is formatted correctly, install a commit-msg hook, or asks whether a branch is "ready to merge" or "ready to land". Also trigger on "rebase my branch onto dev", "set up conventional commits for this repo", or any mention of a dev/main branch split — even if the user doesn't name this workflow directly.
+allowed-tools:
+  - Bash(git branch *)
+  - Bash(git worktree *)
+  - Bash(git status *)
+  - Bash(git rev-parse *)
+  - Bash(echo *)
 ---
 
 # Feature branching: worktree → dev → main
@@ -12,6 +18,15 @@ through a separate, deliberate promotion that this skill never performs.
 
 The reasoning behind each rule matters more than the rule itself — read
 "Why this shape" before mechanically applying the steps below.
+
+## Current git state
+
+Current branch: !`git branch --show-current`
+
+`dev` branch: !`git rev-parse --verify --quiet dev >/dev/null 2>&1 && echo present || echo "MISSING — this repo may not use the worktree → dev → main workflow"`
+
+Worktrees:
+!`git worktree list`
 
 ## Why this shape
 

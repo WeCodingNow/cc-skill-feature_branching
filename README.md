@@ -9,6 +9,18 @@ human promotion.
 See [`SKILL.md`](./SKILL.md) for the actual rules and reasoning Claude
 follows; this file is just about installing and using the skill itself.
 
+## Injected git state & permissions
+
+On load the skill injects a snapshot of the current git state (branch,
+worktrees, whether `dev` exists, dirty tree) via
+[dynamic context](https://code.claude.com/docs/en/skills#inject-dynamic-context),
+so Claude orients before proposing a worktree/commit/land step. Its
+`allowed-tools` frontmatter auto-approves **only** the read-only git commands
+that snapshot uses (`git branch`/`worktree`/`status`/`rev-parse`) while the
+skill is active — deliberately *not* `git commit`/`reset`/`push`, which stay
+behind normal permission prompts, consistent with the "never touch `main`"
+rule.
+
 ## Install
 
 This repo *is* the skill — Claude Code loads a skill from a directory
