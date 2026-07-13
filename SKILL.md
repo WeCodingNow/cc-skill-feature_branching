@@ -1,6 +1,6 @@
 ---
 name: feature-branching
-description: Enforces a worktree-per-branch git workflow with a `dev` integration branch sitting between feature work and `main` — creating worktrees off the right base, writing Conventional Commits, and landing finished work onto `dev` via rebase + fast-forward (never a merge commit, never touching `main`). Use this whenever the user asks to start work on something new, create or set up a worktree, land/merge/integrate a branch onto dev, check whether a commit message is formatted correctly, install a commit-msg hook, or asks whether a branch is "ready to merge" or "ready to land". Also trigger on "rebase my branch onto dev", "set up conventional commits for this repo", or any mention of a dev/main branch split — even if the user doesn't name this workflow directly.
+description: Enforces a worktree-per-branch git workflow with a `dev` integration branch sitting between feature work and `main` — creating worktrees off the right base, keeping commits atomic and buildable, and landing finished work onto `dev` via rebase + fast-forward (never a merge commit, never touching `main`). Use this whenever the user asks to start work on something new, create or set up a worktree, land/merge/integrate a branch onto dev, or asks whether a branch is "ready to merge" or "ready to land". Also trigger on "rebase my branch onto dev" or any mention of a dev/main branch split — even if the user doesn't name this workflow directly.
 allowed-tools:
   - Bash(git branch *)
   - Bash(git worktree *)
@@ -89,39 +89,10 @@ This prints `<goal>/<source-branch-with-every-/-replaced-by-->`, e.g.
 matter how many segments the source branch's own name had. Pass that
 string straight to `EnterWorktree` as `name`.
 
-## Committing: Conventional Commits, atomic, buildable
+## Committing: atomic, buildable
 
-Every commit title must follow
-[Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/):
-
-```
-<type>[(scope)][!]: <description>
-```
-
-- `type` is one of `feat`, `fix`, `docs`, `refactor`, `test`, `chore` (adjust
-  `hooks/commit-msg`'s allow-list if a project genuinely needs more, e.g.
-  `perf`, `build`, `ci` — don't just add types because Conventional Commits
-  permits them elsewhere).
-- `scope` is optional, parenthesized, names the affected area:
-  `fix(parser): ...`.
-- `!` before the colon (or a `BREAKING CHANGE:` footer) marks a breaking
-  change.
-
-Install the validating hook **once per repo**, from any worktree — hooks
-live in the repo's shared `.git/hooks`, not per-worktree, so this doesn't
-need repeating for every new worktree:
-
-```sh
-${CLAUDE_SKILL_DIR}/scripts/install-commit-msg-hook.sh
-```
-
-It symlinks `hooks/commit-msg` into place and makes it executable. If the
-hook rejects a message, fix the wording rather than bypassing it with
-`--no-verify` — a hook failure here means the message doesn't parse, not
-that something is broken.
-
-Beyond the title format, two things stay pure agent judgment (no script can
-make these calls for you):
+Two things stay pure agent judgment (no script can make these calls for
+you):
 
 - **Atomic and at least buildable.** Each commit should be one coherent,
   self-contained change that leaves the project buildable — split unrelated

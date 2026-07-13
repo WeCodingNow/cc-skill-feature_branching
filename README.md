@@ -46,8 +46,6 @@ scripts/land-to-dev.sh            - rebase the current worktree branch onto dev,
 scripts/drop-specs.sh             - remove a branch's .spec/ in one commit, after any promotion/inbox, before landing
 scripts/list-spec-inbox.sh        - print .spec-inbox/ entries with their frontmatter description (or a warning if missing)
 scripts/normalize-branch-name.sh - print <goal>/<source-branch, slashes replaced with dashes>
-scripts/install-commit-msg-hook.sh - one-time per repo: symlinks hooks/commit-msg into .git/hooks
-hooks/commit-msg                  - validates commit titles against Conventional Commits 1.0.0
 ```
 
 `.spec/` isn't the only ephemeral-spec location this skill knows about —
@@ -64,8 +62,6 @@ Rebasing a branch onto `dev` and fast-forwarding `dev` to match is
 mechanical and easy to get subtly wrong under time pressure (e.g. rebasing
 in the wrong direction rewrites `dev`'s own history) — a script that
 refuses to do anything but a genuine fast-forward removes that risk
-entirely. Conventional Commits formatting is likewise a fixed, checkable
-pattern, so it's a `commit-msg` hook rather than something to re-derive by
-eye every commit. Deciding *when* a worktree branch is done, resolving
-rebase conflicts, and writing the actual commit message are judgment calls
-— those stay as instructions in `SKILL.md` for the agent to reason about.
+entirely. Deciding *when* a worktree branch is done, resolving rebase
+conflicts, and writing the actual commit message are judgment calls —
+those stay as instructions in `SKILL.md` for the agent to reason about.
