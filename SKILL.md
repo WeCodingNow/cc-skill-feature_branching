@@ -51,25 +51,31 @@ Worktrees:
   them. Doing it the other way around (checking out `dev` and rebasing
   *it* onto your feature branch) rewrites `dev`'s own commits — avoid that.
 
-## Starting work: create a worktree, then re-base it on `dev`
+## Starting work: create the worktree off `dev`, then enter it
 
-Use the built-in `EnterWorktree` tool to create the worktree — don't
-hand-roll `git worktree add`. It's straightforward for the common case, but
-its default base ref may not be `dev`: depending on the `worktree.baseRef`
-setting, a fresh worktree branches from either `origin/<default-branch>`
-(usually `main`) or your current local `HEAD`. Rather than trying to
-predict which one applies, treat it as unknown and fix it up explicitly:
+`EnterWorktree` branches a new worktree off the currently checked-out HEAD,
+which is normally `main` — not `dev` (this relies on `worktree.baseRef = head`).
+Rather than create the worktree off the wrong base and fix it up afterwards,
+create it off `dev` directly and switch the session into it via `EnterWorktree`'s
+`path` parameter — the same shape the branch-review skill uses:
 
-1. Call `EnterWorktree`.
-2. Before making your first commit, run `git rebase dev` in the new
-   worktree. If the branch already forked from `dev`'s tip, this is a
-   no-op. If it forked from `main`/`origin` instead, this moves it onto
-   `dev` — safe to do immediately since there are no commits of yours yet
-   to conflict.
+1. From the main working directory, create the worktree and its branch off
+   `dev`:
+   ```sh
+   git worktree add ".claude/worktrees/<name>" -b "<branch>" dev
+   ```
+2. Switch the session into it:
+   ```
+   EnterWorktree({ path: ".claude/worktrees/<name>" })
+   ```
 3. If there's no local `dev` branch at all, this repo hasn't adopted the
-   worktree → dev → main split (or it hasn't been created yet). Creating
-   the integration branch is a repo-setup decision for a human to make, not
+   worktree → dev → main split (or it hasn't been created yet). Creating the
+   integration branch is a repo-setup decision for a human to make, not
    something to do unilaterally mid-task — say so rather than inventing one.
+
+Because the branch forks from `dev`'s tip from the start, there's nothing to
+rebase before your first commit. (If a worktree ever does end up on the wrong
+base, `git rebase dev` while it still has no commits of yours is the safe fixup.)
 
 ## Committing: atomic, buildable
 
@@ -191,8 +197,14 @@ If the rebase step hits conflicts, the script stops and tells you to
 resolve them and rerun — conflict resolution is exactly the kind of
 judgment call that shouldn't be scripted.
 
-After a successful land, clean up the worktree (`ExitWorktree`, or
-`git worktree remove` + `git branch -d` if it wasn't created via the tool).
+After a successful land, remove the worktree and its branch. Because the
+worktree was entered via `path`, `ExitWorktree` won't delete it — leave it with
+`ExitWorktree({ action: "keep" })`, then from the main working directory:
+```sh
+git worktree remove .claude/worktrees/<name>
+git branch -d <branch>
+```
+`git branch -d` succeeds because the branch is now merged into `dev`.
 If `dev` happens to be checked out in another worktree, that worktree's
 `git status` will show it's now behind by however many commits it hasn't
 refreshed — refresh it there when you next work in it; nothing is lost by
