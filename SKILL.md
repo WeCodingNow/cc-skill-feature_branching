@@ -191,7 +191,9 @@ fast-forward — so if `dev` moved between your rebase and the landing, e.g.
 another worktree landed first, it fails safely instead of overwriting
 anything). It refuses to run from `main`, from `dev` itself, or from the
 repo's main working directory, and refuses if there are uncommitted
-changes.
+changes. It also refuses while any submodule records a commit that isn't yet
+on its origin — that commit would be lost when the worktree is removed, so get
+the submodule's `dev` landed onto its `main` and pushed first.
 
 If the rebase step hits conflicts, the script stops and tells you to
 resolve them and rerun — conflict resolution is exactly the kind of

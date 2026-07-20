@@ -43,6 +43,27 @@ if [ -n "$(git status --porcelain)" ]; then
   exit 1
 fi
 
+# Every submodule commit this superproject records must already live on the
+# submodule's origin. A commit that exists only in this worktree's submodule
+# checkout is destroyed when the worktree is removed, and a gitlink pointing at
+# it dangles for anyone who fetches. The working tree is clean by here (checked
+# above), so each initialised submodule's HEAD is exactly the commit that lands.
+if [ -f .gitmodules ]; then
+  sub_paths=$(git config --file .gitmodules --get-regexp '^submodule\..*\.path$' | awk '{print $2}')
+  for sub in $sub_paths; do
+    # Uninitialised submodule (no local checkout) -- nothing made here to lose.
+    git -C "$sub" rev-parse --verify --quiet HEAD >/dev/null 2>&1 || continue
+    sha=$(git rev-parse --verify --quiet "HEAD:$sub") || continue
+    git -C "$sub" fetch --quiet origin 2>/dev/null || true
+    if [ -z "$(git -C "$sub" branch -r --contains "$sha" 2>/dev/null)" ]; then
+      echo "error: submodule '$sub' records commit ${sha:0:12}, which is not on its origin." >&2
+      echo "Removing this worktree would destroy that commit. Land the submodule's 'dev' onto its" >&2
+      echo "'main' and push it (agents don't push -- ask the user), then rerun this script." >&2
+      exit 1
+    fi
+  done
+fi
+
 echo "Rebasing '$current_branch' onto tip of 'dev'..."
 if ! git rebase dev; then
   echo >&2
