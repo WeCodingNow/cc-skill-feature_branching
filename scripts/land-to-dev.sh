@@ -45,9 +45,12 @@ fi
 
 # A submodule commit this branch introduces can exist only in this worktree's
 # submodule checkout -- removing the worktree then destroys it, and the gitlink
-# referencing it dangles for anyone who fetches. Refuse to land such a commit
-# until it's on the submodule's origin. Only gitlinks this branch *moves*
-# relative to dev are at risk; an unchanged gitlink was vetted when it landed.
+# referencing it dangles for anyone who fetches. Refuse to land until that commit
+# is reconciled onto the submodule's origin 'main' (merge its dev-local/<...>
+# branch into 'dev', land 'dev' onto 'main', push) -- which both preserves the
+# commit and forces any conflict with an updated dev/main to surface here. Only
+# gitlinks this branch *moves* relative to dev are at risk; an unchanged gitlink
+# was vetted when it landed.
 if [ -f .gitmodules ]; then
   sub_paths=$(git config --file .gitmodules --get-regexp '^submodule\..*\.path$' | awk '{print $2}')
   for sub in $sub_paths; do
@@ -60,10 +63,10 @@ if [ -f .gitmodules ]; then
     # superproject and would check the wrong repo.
     [ -e "$sub/.git" ] || continue
     git -C "$sub" fetch --quiet origin 2>/dev/null || true
-    if [ -z "$(git -C "$sub" branch -r --contains "$new" 2>/dev/null)" ]; then
-      echo "error: submodule '$sub' records commit ${new:0:12}, which is not on its origin." >&2
-      echo "Removing this worktree would destroy that commit. Land the submodule's 'dev' onto its" >&2
-      echo "'main' and push it (agents don't push -- ask the user), then rerun this script." >&2
+    if ! git -C "$sub" merge-base --is-ancestor "$new" origin/main 2>/dev/null; then
+      echo "error: submodule '$sub' records commit ${new:0:12}, which is not on its origin 'main'." >&2
+      echo "Merge its 'dev-local/<...>' branch into 'dev', land 'dev' onto 'main', and push" >&2
+      echo "(agents don't push -- ask the user); bump the gitlink to the 'main' commit, then rerun." >&2
       exit 1
     fi
   done

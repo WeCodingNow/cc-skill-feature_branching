@@ -192,9 +192,9 @@ another worktree landed first, it fails safely instead of overwriting
 anything). It refuses to run from `main`, from `dev` itself, or from the
 repo's main working directory, and refuses if there are uncommitted
 changes. It also refuses when the branch moves a submodule's gitlink to a commit
-that isn't yet on that submodule's origin — that commit would be lost when the
-worktree is removed, so get the submodule's `dev` landed onto its `main` and
-pushed first.
+that isn't yet on that submodule's origin `main` — that commit would be lost when
+the worktree is removed, so first reconcile the submodule's `dev-local/<stub>`
+branch through its own `dev` → `main` flow and get `main` pushed.
 
 If the rebase step hits conflicts, the script stops and tells you to
 resolve them and rerun — conflict resolution is exactly the kind of
