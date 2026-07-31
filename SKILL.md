@@ -1,6 +1,6 @@
 ---
 name: feature-branching
-description: Enforces a worktree-per-branch git workflow with a `dev` integration branch sitting between feature work and `main` — creating worktrees off the right base, keeping commits atomic and buildable, and landing finished work onto `dev` via rebase + fast-forward (never a merge commit, never touching `main`). Use this whenever the user asks to start work on something new, create or set up a worktree, land/merge/integrate a branch onto dev, or asks whether a branch is "ready to merge" or "ready to land". Also trigger on "rebase my branch onto dev" or any mention of a dev/main branch split — even if the user doesn't name this workflow directly.
+description: Enforces a worktree-per-branch git workflow with a `dev` integration branch sitting between feature work and `main` — creating worktrees off the right base, keeping commits atomic and buildable, handling submodules, and landing finished work onto `dev` via rebase + fast-forward (never a merge commit, never touching `main`). Invoke it once the user has confirmed they want this workflow for the work at hand, or when they ask to create or set up a worktree, to land/merge/integrate a branch onto dev, to rebase a branch onto dev, or whether a branch is "ready to merge" or "ready to land" — even if they don't name this workflow directly. Starting a piece of development is not itself a trigger — ask first, and invoke on a yes.
 allowed-tools:
   - Bash(git branch *)
   - Bash(git worktree *)
@@ -89,6 +89,38 @@ you):
 - **A description that explains *why*, not just *what*** — the diff already
   shows what changed.
 
+## Submodules
+
+A submodule checkout inside the worktree is an independent clone: commits made
+there live nowhere else and vanish when the worktree is removed. When the
+worktree is created, the post-checkout hook populates each submodule and puts
+every top-level one on a `dev-local/<stub>` branch — `<stub>` is this worktree's
+branch name with `/` rewritten to `-` — rooted at the exact commit the
+superproject's gitlink pins. Develop the submodule on that branch — its base is
+then exactly what the superproject references, and the superproject's build and
+tests run against the change.
+
+- Commit on `dev-local/<stub>` like any other work, by the standard above;
+  never commit on a detached HEAD.
+- When wrapping up, reconcile the branch one level down, through the
+  submodule's own `dev` → `main` flow: merge `dev-local/<stub>` into the
+  submodule's `dev`, then have its `main` updated from `dev`. Resolving those
+  merges is where any incompatibility with a `dev`/`main` that moved
+  independently surfaces — deal with it here, deliberately.
+- The reconciled `main` must reach the submodule's origin before the
+  superproject branch lands. Agents don't push — ask the user to land the
+  submodule's `dev` onto its `main` and push it (the same flow, one level
+  down). In a pinch the `dev-local/<stub>` branch can be pushed on its own to
+  preserve a commit.
+- Bump the superproject's gitlink (`git add <path>`) only to a submodule commit
+  that is on the submodule's origin `main`. A gitlink naming a local-only commit
+  dangles the moment a worktree is cleaned up.
+- Remove the worktree only once the commit its gitlink names is pushed.
+
+`land-to-dev.sh` (below) backstops this: it refuses to land
+while a submodule commit the branch introduces is missing from the submodule's
+origin `main`.
+
 ## Ephemeral specs: create, promote, inbox, drop
 
 Spec-driven work often produces documents that matter *now* but shouldn't
@@ -101,19 +133,11 @@ TODO.md-handling skill.) Track `.spec/` in git, on the feature branch —
 it's tracked, not gitignored, so the "why" behind a decision survives in
 commit history for as long as the branch is alive.
 
-Every spec file starts with YAML frontmatter containing a short, terse
-`description:` (one to two sentences), from the moment it's created:
-
-```markdown
----
-description: Research on how to provision apt cache so that debian VMs can avoid doing apt update.
----
-```
-
-This means anything later moved into `.spec-inbox/` is already
-compliant — there's no separate "add a description" step at inbox time.
-It's what lets `scripts/list-spec-inbox.sh` (below) surface inbox entries
-by description instead of just filenames.
+Every spec file carries a frontmatter `description:` from the moment it's
+created (the format is in global `rules/ephemeral-specs.md`), so anything
+later moved into `.spec-inbox/` is already compliant — that's what lets
+`scripts/list-spec-inbox.sh` (below) surface inbox entries by description
+instead of just filenames.
 
 `.spec/` never reaches `dev`: it exists only on feature branches and gets
 removed in a final commit before landing. Three things can happen at that
@@ -133,10 +157,8 @@ point, two judgment calls and one mechanical step:
    the common case). Move those into `.spec-inbox/` at the repo root,
    preserving their relative path under `.spec/` (e.g.
    `.spec/research/x.md` → `.spec-inbox/research/x.md`), via a normal
-   `git mv` + commit. Unlike `.spec/`, `.spec-inbox/` is tracked on `dev`
-   itself — not gitignored, not dropped before landing — because it's
-   meant to outlive the branch that populated it; a later, unrelated
-   branch is the expected consumer. Symmetrically, once a branch actually
+   `git mv` + commit — that directory is tracked on `dev` itself, so the
+   entry outlives this branch. Symmetrically, once a branch actually
    consumes an inbox entry (or determines it's gone stale), delete it from
    `.spec-inbox/` as a normal commit right then — this isn't limited to
    landing time, and like promotion, "is this still useful" is a judgment
@@ -192,9 +214,7 @@ another worktree landed first, it fails safely instead of overwriting
 anything). It refuses to run from `main`, from `dev` itself, or from the
 repo's main working directory, and refuses if there are uncommitted
 changes. It also refuses when the branch moves a submodule's gitlink to a commit
-that isn't yet on that submodule's origin `main` — that commit would be lost when
-the worktree is removed, so first reconcile the submodule's `dev-local/<stub>`
-branch through its own `dev` → `main` flow and get `main` pushed.
+that isn't yet on that submodule's origin `main` — see "Submodules" above.
 
 If the rebase step hits conflicts, the script stops and tells you to
 resolve them and rerun — conflict resolution is exactly the kind of
